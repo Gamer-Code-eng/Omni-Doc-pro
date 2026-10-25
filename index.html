@@ -16,10 +16,11 @@
         .btn:hover { background: #4338ca; }
         .features { text-align: left; background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-muted); }
         .features li { margin-bottom: 6px; }
+        .app-view { display: none; text-align: left; }
     </style>
 </head>
 <body>
-    <div class="card">
+    <div class="card" id="welcome-card">
         <h1>OmniDoc Pro</h1>
         <div class="badge">ULTIMATE SUITE v1.0</div>
         <p>Universal Document Suite, CamScanner, Multi-Language OCR, and PDF Tools - 100% Privacy First & Offline Ready.</p>
@@ -31,8 +32,30 @@
             <li>✍️ Digital Signature & Watermarking</li>
         </ul>
 
-        <button class="btn" onclick="alert('OmniDoc Pro Workspace is fully active!')">Launch Workspace</button>
+        <button class="btn" onclick="launchApp()">Launch Workspace</button>
     </div>
+
+    <div class="card app-view" id="app-view">
+        <h1>OmniDoc Workspace</h1>
+        <div class="badge">ACTIVE SESSION</div>
+        <p>Your local vault and processing tools are ready.</p>
+        <input type="file" id="fileInput" style="display:none" onchange="handleFile(this)">
+        <button class="btn" onclick="document.getElementById('fileInput').click()">📁 Open Document</button>
+        <button class="btn" style="background:#334155;" onclick="location.reload()">Back to Home</button>
+    </div>
+
+    <script>
+        function launchApp() {
+            document.getElementById('welcome-card').style.display = 'none';
+            document.getElementById('app-view').style.display = 'block';
+        }
+        function handleFile(input) {
+            if(input.files && input.files[0]) {
+                alert('Loaded file: ' + input.files[0].name);
+            }
+        }
+    </script>
 </body>
 </html>
+
   
