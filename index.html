@@ -3,59 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmniDoc Pro - Ultimate Suite</title>
+    <title>OmniDoc Pro - Ultimate Document Suite</title>
     <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22OmniDoc%20Pro%22%2C%22short_name%22%3A%22OmniDoc%22%2C%22start_url%22%3A%22%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%234f46e5%22%7D">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
-        :root { --primary: #4f46e5; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --text-muted: #94a3b8; --border: #334155; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-        .card { background: var(--card); padding: 24px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); text-align: center; max-width: 420px; width: 100%; border: 1px solid var(--border); }
-        h1 { color: #818cf8; margin-bottom: 8px; font-size: 22px; }
-        .badge { display: inline-block; background: rgba(79, 70, 229, 0.2); color: #818cf8; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
-        p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
-        .btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 16px; transition: background 0.2s; margin-bottom: 12px; }
-        .btn:hover { background: #4338ca; }
-        .features { text-align: left; background: rgba(15, 23, 42, 0.5); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: var(--text-muted); }
-        .features li { margin-bottom: 6px; }
-        .app-view { display: none; text-align: left; }
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --accent: #38bdf8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; display: flex; justify-content: center; align-items: flex-start; }
+        
+        .container { width: 100%; max-width: 600px; margin: 0 auto; }
+        
+        /* Navigation / Header */
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; }
+        .logo { font-size: 20px; font-weight: 700; color: #818cf8; }
+        .badge { background: rgba(79, 70, 229, 0.25); color: #818cf8; font-size: 11px; padding: 4px 8px; border-radius: 20px; font-weight: 600; text-transform: uppercase; }
+
+        /* Navigation Grid */
+        .nav-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+        .nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; text-align: center; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .nav-btn.active { background: var(--primary); border-color: var(--primary); }
+        .nav-btn span { font-size: 18px; }
+
+        /* Module Panels */
+        .panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .panel.active { display: block; }
+        .panel-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+
+        /* Controls & Inputs */
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 14px; margin-top: 10px; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-secondary { background: #334155; }
+        .btn-secondary:hover { background: #475569; }
+        
+        input[type="file"] { display: none; }
+        .dropzone { border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; color: var(--text-muted); font-size: 13px; margin-bottom: 12px; background: rgba(15, 23, 42, 0.3); }
+        .dropzone:hover { border-color: var(--primary); color: var(--text); }
+
+        /* Document Display & Canvas Area */
+        .display-area { background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 12px; max-height: 300px; overflow-y: auto; font-size: 13px; color: #cbd5e1; white-space: pre-wrap; word-break: break-word; }
+        video, canvas, img { width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border); }
+
+        /* Status & Feedback */
+        .status { font-size: 12px; color: var(--text-muted); margin-top: 8px; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="card" id="welcome-card">
-        <h1>OmniDoc Pro</h1>
-        <div class="badge">ULTIMATE SUITE v1.0</div>
-        <p>Universal Document Suite, CamScanner, Multi-Language OCR, and PDF Tools - 100% Privacy First & Offline Ready.</p>
+
+<div class="container">
+    <header>
+        <div class="logo">OmniDoc Pro</div>
+        <div class="badge">Offline Vault</div>
+    </header>
+
+    <!-- App Navigation -->
+    <div class="nav-grid">
+        <button class="nav-btn active" onclick="switchTab('viewer')"><span>📄</span> Viewer</button>
+        <button class="nav-btn" onclick="switchTab('scanner')"><span>📷</span> CamScanner</button>
+        <button class="nav-btn" onclick="switchTab('ocr')"><span>🌐</span> OCR Reader</button>
+        <button class="nav-btn" onclick="switchTab('signature')"><span>✍️</span> Sign & Watermark</button>
+    </div>
+
+    <!-- 1. Universal Document Viewer Panel -->
+    <div id="panel-viewer" class="panel active">
+        <div class="panel-title"><span>📄</span> Universal Document Viewer</div>
+        <div class="dropzone" onclick="document.getElementById('viewInput').click()">
+            Tap to open local Document, PDF, or Text File
+        </div>
+        <input type="file" id="viewInput" onchange="loadDocument(this)">
+        <div id="viewStatus" class="status">No file loaded yet</div>
+        <div id="viewArea" class="display-area" style="display:none;"></div>
+    </div>
+
+    <!-- 2. CamScanner Module -->
+    <div id="panel-scanner" class="panel">
+        <div class="panel-title"><span>📷</span> CamScanner Capture</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Capture document pages directly using your mobile camera or pick from gallery.</p>
+        <button class="btn" onclick="startCamera()">📷 Start Live Camera</button>
+        <video id="video" autoplay playsinline style="display:none;"></video>
+        <button id="snapBtn" class="btn btn-secondary" style="display:none;" onclick="takeSnapshot()">Snap Document</button>
+        <canvas id="scanCanvas" style="display:none;"></canvas>
+    </div>
+
+    <!-- 3. Multi-Language OCR Engine -->
+    <div id="panel-ocr" class="panel">
+        <div class="panel-title"><span>🌐</span> Optical Character Reader (OCR)</div>
+        <div class="dropzone" onclick="document.getElementById('ocrInput').click()">
+            Select Document Image or Scan to Extract Text
+        </div>
+        <input type="file" id="ocrInput" accept="image/*" onchange="runOCR(this)">
+        <div id="ocrStatus" class="status">Ready to process scans</div>
+        <div id="ocrArea" class="display-area" style="display:none;"></div>
+    </div>
+
+    <!-- 4. Digital Signature & Watermark Module -->
+    <div id="panel-signature" class="panel">
+        <div class="panel-title"><span>✍️</span> Digital Signature & Watermark</div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Draw signature below:</p>
+        <canvas id="sigCanvas" height="150" style="background:#0f172a; cursor:crosshair;"></canvas>
+        <button class="btn btn-secondary" onclick="clearSignature()">Clear Signature</button>
+        <button class="btn" onclick="applySignature()">Export Signed Stamp</button>
+    </div>
+</div>
+
+<script>
+    // Tab Navigation Switcher
+    function switchTab(tabName) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         
-        <ul class="features">
-            <li>📄 Universal Viewer (PDF, Docs, Sheets)</li>
-            <li>📷 CamScanner Batch Processing</li>
-            <li>🌐 Multi-Language OCR Engine</li>
-            <li>✍️ Digital Signature & Watermarking</li>
-        </ul>
+        document.getElementById('panel-' + tabName).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        stopCamera();
+    }
 
-        <button class="btn" onclick="launchApp()">Launch Workspace</button>
-    </div>
-
-    <div class="card app-view" id="app-view">
-        <h1>OmniDoc Workspace</h1>
-        <div class="badge">ACTIVE SESSION</div>
-        <p>Your local vault and processing tools are ready.</p>
-        <input type="file" id="fileInput" style="display:none" onchange="handleFile(this)">
-        <button class="btn" onclick="document.getElementById('fileInput').click()">📁 Open Document</button>
-        <button class="btn" style="background:#334155;" onclick="location.reload()">Back to Home</button>
-    </div>
-
-    <script>
-        function launchApp() {
-            document.getElementById('welcome-card').style.display = 'none';
-            document.getElementById('app-view').style.display = 'block';
+    // 1. Universal Document Reader
+    function loadDocument(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const status = document.getElementById('viewStatus');
+        const area = document.getElementById('viewArea');
+        status.innerText = `Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            area.style.display = 'block';
+            area.innerText = e.target.result;
+        };
+        
+        if (file.type.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.html') || file.name.endsWith('.md')) {
+            reader.readAsText(file);
+        } else {
+            area.style.display = 'block';
+            area.innerText = `[Document Binary Loaded Safely]\nName: ${file.name}\nType: ${file.type || 'Document File'}\nLast Modified: ${new Date(file.lastModified).toLocaleDateString()}`;
         }
-        function handleFile(input) {
-            if(input.files && input.files[0]) {
-                alert('Loaded file: ' + input.files[0].name);
-            }
+    }
+
+    // 2. CamScanner Module (Camera API)
+    let mediaStream = null;
+    async function startCamera() {
+        const video = document.getElementById('video');
+        const snapBtn = document.getElementById('snapBtn');
+        try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = mediaStream;
+            video.style.display = 'block';
+            snapBtn.style.display = 'block';
+        } catch (err) {
+            alert('Camera access error or permission denied.');
         }
-    </script>
+    }
+
+    function stopCamera() {
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            document.getElementById('video').style.display = 'none';
+            document.getElementById('snapBtn').style.display = 'none';
+        }
+    }
+
+    function takeSnapshot() {
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('scanCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        canvas.style.display = 'block';
+        stopCamera();
+    }
+
+    // 3. Multi-Language OCR Engine (Tesseract.js)
+    async function runOCR(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const status = document.getElementById('ocrStatus');
+        const area = document.getElementById('ocrArea');
+        status.innerText = 'Analyzing document image and extracting text...';
+        area.style.display = 'none';
+
+        try {
+            const worker = await Tesseract.createWorker('eng');
+            const ret = await worker.recognize(file);
+            status.innerText = 'OCR Extraction Complete!';
+            area.style.display = 'block';
+            area.innerText = ret.data.text || 'No text found in this scan.';
+            await worker.terminate();
+        } catch (e) {
+            status.innerText = 'OCR processing failed. Ensure file is a valid image.';
+        }
+    }
+
+    // 4. Interactive Digital Signature Engine
+    const sigCanvas = document.getElementById('sigCanvas');
+    const sigCtx = sigCanvas.getContext('2d');
+    let isDrawing = false;
+
+    function resizeSigCanvas() {
+        sigCanvas.width = sigCanvas.offsetWidth;
+        sigCtx.strokeStyle = '#38bdf8';
+        sigCtx.lineWidth = 2;
+        sigCtx.lineCap = 'round';
+    }
+    window.addEventListener('load', resizeSigCanvas);
+
+    function startDraw(e) {
+        isDrawing = true;
+        sigCtx.beginPath();
+        const rect = sigCanvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        sigCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const rect = sigCanvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        sigCtx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        sigCtx.stroke();
+    }
+
+    function endDraw() { isDrawing = false; }
+
+    sigCanvas.addEventListener('mousedown', startDraw);
+    sigCanvas.addEventListener('mousemove', draw);
+    sigCanvas.addEventListener('mouseup', endDraw);
+    sigCanvas.addEventListener('touchstart', startDraw);
+    sigCanvas.addEventListener('touchmove', draw);
+    sigCanvas.addEventListener('touchend', endDraw);
+
+    function clearSignature() {
+        sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    }
+
+    function applySignature() {
+        const dataUrl = sigCanvas.toDataURL();
+        const win = window.open();
+        win.document.write('<img src="' + dataUrl + '" style="background:#0f172a; padding:20px; border-radius:10px;"/>');
+    }
+</script>
 </body>
 </html>
+
 
   
