@@ -23,23 +23,19 @@
         
         .container { width: 100%; max-width: 600px; margin: 0 auto; }
         
-        /* Navigation / Header */
         header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 16px; }
         .logo { font-size: 20px; font-weight: 700; color: #818cf8; }
         .badge { background: rgba(79, 70, 229, 0.25); color: #818cf8; font-size: 11px; padding: 4px 8px; border-radius: 20px; font-weight: 600; text-transform: uppercase; }
 
-        /* Navigation Grid */
         .nav-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
         .nav-btn { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; text-align: center; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
         .nav-btn.active { background: var(--primary); border-color: var(--primary); }
         .nav-btn span { font-size: 18px; }
 
-        /* Module Panels */
         .panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
         .panel.active { display: block; }
         .panel-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
 
-        /* Controls & Inputs */
         .btn { background: var(--primary); color: white; border: none; padding: 12px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 14px; margin-top: 10px; transition: background 0.2s; }
         .btn:hover { background: var(--primary-hover); }
         .btn-secondary { background: #334155; }
@@ -49,11 +45,11 @@
         .dropzone { border: 2px dashed var(--border); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; color: var(--text-muted); font-size: 13px; margin-bottom: 12px; background: rgba(15, 23, 42, 0.3); }
         .dropzone:hover { border-color: var(--primary); color: var(--text); }
 
-        /* Document Display & Canvas Area */
-        .display-area { background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 12px; max-height: 300px; overflow-y: auto; font-size: 13px; color: #cbd5e1; white-space: pre-wrap; word-break: break-word; }
-        video, canvas, img { width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border); }
+        .display-area { background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 12px; min-height: 250px; max-height: 450px; overflow-y: auto; font-size: 13px; color: #cbd5e1; white-space: pre-wrap; word-break: break-word; }
+        .doc-frame { width: 100%; height: 380px; border: none; border-radius: 6px; }
+        .doc-img { width: 100%; max-height: 380px; object-fit: contain; border-radius: 6px; }
+        video, canvas { width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--border); }
 
-        /* Status & Feedback */
         .status { font-size: 12px; color: var(--text-muted); margin-top: 8px; text-align: center; }
     </style>
 </head>
@@ -65,19 +61,18 @@
         <div class="badge">Offline Vault</div>
     </header>
 
-    <!-- App Navigation -->
     <div class="nav-grid">
-        <button class="nav-btn active" onclick="switchTab('viewer')"><span>📄</span> Viewer</button>
-        <button class="nav-btn" onclick="switchTab('scanner')"><span>📷</span> CamScanner</button>
-        <button class="nav-btn" onclick="switchTab('ocr')"><span>🌐</span> OCR Reader</button>
-        <button class="nav-btn" onclick="switchTab('signature')"><span>✍️</span> Sign & Watermark</button>
+        <button class="nav-btn active" onclick="switchTab('viewer', event)"><span>📄</span> Viewer</button>
+        <button class="nav-btn" onclick="switchTab('scanner', event)"><span>📷</span> CamScanner</button>
+        <button class="nav-btn" onclick="switchTab('ocr', event)"><span>🌐</span> OCR Reader</button>
+        <button class="nav-btn" onclick="switchTab('signature', event)"><span>✍️</span> Sign & Watermark</button>
     </div>
 
     <!-- 1. Universal Document Viewer Panel -->
     <div id="panel-viewer" class="panel active">
         <div class="panel-title"><span>📄</span> Universal Document Viewer</div>
         <div class="dropzone" onclick="document.getElementById('viewInput').click()">
-            Tap to open local Document, PDF, or Text File
+            Tap to open local Document, PDF, Image, or Text File
         </div>
         <input type="file" id="viewInput" onchange="loadDocument(this)">
         <div id="viewStatus" class="status">No file loaded yet</div>
@@ -87,7 +82,7 @@
     <!-- 2. CamScanner Module -->
     <div id="panel-scanner" class="panel">
         <div class="panel-title"><span>📷</span> CamScanner Capture</div>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Capture document pages directly using your mobile camera or pick from gallery.</p>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Capture document pages directly using your mobile camera.</p>
         <button class="btn" onclick="startCamera()">📷 Start Live Camera</button>
         <video id="video" autoplay playsinline style="display:none;"></video>
         <button id="snapBtn" class="btn btn-secondary" style="display:none;" onclick="takeSnapshot()">Snap Document</button>
@@ -116,18 +111,17 @@
 </div>
 
 <script>
-    // Tab Navigation Switcher
-    function switchTab(tabName) {
+    function switchTab(tabName, evt) {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         
         document.getElementById('panel-' + tabName).classList.add('active');
-        event.currentTarget.classList.add('active');
+        if (evt && evt.currentTarget) evt.currentTarget.classList.add('active');
         
         stopCamera();
     }
 
-    // 1. Universal Document Reader
+    // Real Universal File Rendering
     function loadDocument(input) {
         const file = input.files[0];
         if (!file) return;
@@ -135,22 +129,34 @@
         const status = document.getElementById('viewStatus');
         const area = document.getElementById('viewArea');
         status.innerText = `Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            area.style.display = 'block';
-            area.innerText = e.target.result;
-        };
-        
-        if (file.type.includes('text') || file.name.endsWith('.txt') || file.name.endsWith('.html') || file.name.endsWith('.md')) {
-            reader.readAsText(file);
+        area.style.display = 'block';
+        area.innerHTML = ''; // clear previous views
+
+        const fileUrl = URL.createObjectURL(file);
+
+        if (file.type.startsWith('image/')) {
+            // Display images directly
+            const img = document.createElement('img');
+            img.src = fileUrl;
+            img.className = 'doc-img';
+            area.appendChild(img);
+        } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+            // Render PDF in iframe viewer
+            const iframe = document.createElement('iframe');
+            iframe.src = fileUrl;
+            iframe.className = 'doc-frame';
+            area.appendChild(iframe);
         } else {
-            area.style.display = 'block';
-            area.innerText = `[Document Binary Loaded Safely]\nName: ${file.name}\nType: ${file.type || 'Document File'}\nLast Modified: ${new Date(file.lastModified).toLocaleDateString()}`;
+            // Read as formatted text (TXT, HTML, MD, JSON, Code files)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                area.innerText = e.target.result;
+            };
+            reader.readAsText(file);
         }
     }
 
-    // 2. CamScanner Module (Camera API)
+    // CamScanner Module
     let mediaStream = null;
     async function startCamera() {
         const video = document.getElementById('video');
@@ -185,14 +191,14 @@
         stopCamera();
     }
 
-    // 3. Multi-Language OCR Engine (Tesseract.js)
+    // OCR Engine
     async function runOCR(input) {
         const file = input.files[0];
         if (!file) return;
 
         const status = document.getElementById('ocrStatus');
         const area = document.getElementById('ocrArea');
-        status.innerText = 'Analyzing document image and extracting text...';
+        status.innerText = 'Extracting text from image...';
         area.style.display = 'none';
 
         try {
@@ -203,11 +209,11 @@
             area.innerText = ret.data.text || 'No text found in this scan.';
             await worker.terminate();
         } catch (e) {
-            status.innerText = 'OCR processing failed. Ensure file is a valid image.';
+            status.innerText = 'OCR processing failed. Select a valid image file.';
         }
     }
 
-    // 4. Interactive Digital Signature Engine
+    // Signature Engine
     const sigCanvas = document.getElementById('sigCanvas');
     const sigCtx = sigCanvas.getContext('2d');
     let isDrawing = false;
@@ -256,7 +262,8 @@
     }
 </script>
 </body>
-</html>
+    </html>
+    
 
 
   
